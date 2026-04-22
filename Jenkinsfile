@@ -7,38 +7,39 @@ pipeline {
 
     environment {
         PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
+        SONARQUBE_SERVER = 'SonarQubeServer'
+        SONAR_TOKEN = credentials('sonar_token')
         DOCKERHUB_CREDENTIALS_ID = 'Docker-Hub'
-        DOCKERHUB_REPO = 'amirnoori1/shoppingcart-v4'
+        DOCKERHUB_REPO = 'amirnoori1/shoppingcart-v5'
         DOCKER_IMAGE_TAG = 'latest'
     }
 
     stages {
 
-        stage('Check') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Amir-noori-github/ShoppingCart_v4.git'
+                git branch: 'main', url: 'https://github.com/Amir-noori-github/ShoppingCart_v5.git'
             }
         }
 
-        stage('Build Job') {
+        stage('Build & Test') {
             steps {
-                bat 'mvn clean install'
+                bat 'mvn clean verify'
             }
         }
 
-        stage('Test') {
+        stage('SonarQube Analysis') {
             steps {
-                bat 'mvn test'
+                withSonarQubeEnv('SonarQubeServer') {
+                    bat """
+                        mvn sonar:sonar ^
+                        -Dsonar.login=${env.SONAR_TOKEN}
+                    """
+                }
             }
         }
 
-        stage('Generate Report') {
-            steps {
-                bat 'mvn jacoco:report'
-            }
-        }
-
-        stage('Publish Test Result') {
+        stage('Publish Test Results') {
             steps {
                 junit '**/target/surefire-reports/*.xml'
             }
