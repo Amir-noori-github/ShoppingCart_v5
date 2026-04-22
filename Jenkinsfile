@@ -33,7 +33,7 @@ pipeline {
                 withSonarQubeEnv('SonarQubeServer') {
                     bat """
                         mvn sonar:sonar ^
-                        -Dsonar.login=${env.SONAR_TOKEN}
+                        -Dsonar.login=${env.Sonar_Token}
                     """
                 }
             }
